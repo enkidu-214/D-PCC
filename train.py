@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from models.utils import  AverageMeter, str2bool
 from dataset.dataset import CompressDataset
 from args.shapenet_args import parse_shapenet_args
-from args.semantickitti_args import parse_semantickitti_args
+from args.sonardata_args import parse_sonardata_args
 from torch.optim.lr_scheduler import StepLR
 from models.Chamfer3D.dist_chamfer_3D import chamfer_3DDist
 chamfer_dist = chamfer_3DDist()
@@ -26,7 +26,8 @@ def train(args):
         print('The performance will degrade if batch_size is larger than 1!')
 
     if args.compress_normal == True:
-        args.in_fdim = 6
+        #args.in_fdim = 6
+        args.in_fdim = 4
 
     # load data
     train_dataset = CompressDataset(data_path=args.train_data_path, cube_size=args.train_cube_size, batch_size=args.batch_size)
@@ -146,7 +147,8 @@ def train(args):
                 if args.compress_normal == True:
                     normals = input_dict['normals'].cuda().permute(0, 2, 1).contiguous()
                     input = torch.cat((input, normals), dim=1)
-                    args.in_fdim = 6
+                    #args.in_fdim = 6
+                    args.in_fdim = 4
 
                 # gt_xyzs
                 gt_xyzs = input[:, :3, :].contiguous()
@@ -188,7 +190,7 @@ def reset_model_args(train_args, model_args):
 def parse_train_args():
     parser = argparse.ArgumentParser(description='Training Arguments')
 
-    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or semantickitti')
+    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or sonardata')
     parser.add_argument('--batch_size', default=1, type=int, help='the performance will degrade if batch_size is larger than 1!')
     parser.add_argument('--downsample_rate', default=[1/3, 1/3, 1/3], nargs='+', type=float, help='downsample rate')
     parser.add_argument('--max_upsample_num', default=[8, 8, 8], nargs='+', type=int, help='max upsmaple number, reversely symmetric with downsample_rate')
@@ -210,12 +212,12 @@ def parse_train_args():
 
 if __name__ == "__main__":
     train_args = parse_train_args()
-    assert train_args.dataset in ['shapenet', 'semantickitti']
+    assert train_args.dataset in ['shapenet', 'sonardata']
 
     if train_args.dataset == 'shapenet':
         model_args = parse_shapenet_args()
     else:
-        model_args = parse_semantickitti_args()
+        model_args = parse_sonardata_args()
 
     reset_model_args(train_args, model_args)
 

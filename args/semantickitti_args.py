@@ -2,11 +2,11 @@ import argparse
 from models.utils import str2bool
 
 
-def parse_semantickitti_args():
+def parse_sonardata_args():
     parser = argparse.ArgumentParser(description='Model Arguments')
 
     # dataset name
-    parser.add_argument('--dataset', default='semantickitti', type=str, help='shapenet or semantickitti')
+    parser.add_argument('--dataset', default='sonardata', type=str, help='shapenet or sonardata')
     # optimizer
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate for backbone')
     parser.add_argument('--aux_lr', default=1e-3, type=float, help='learning rate for entropy model')
@@ -16,11 +16,11 @@ def parse_semantickitti_args():
     parser.add_argument('--lr_decay_step', default=15, type=int, help='learning rate decay step size')
     parser.add_argument('--gamma', default=0.5, type=float, help='gamma for scheduler_steplr')
     # dataset
-    parser.add_argument('--train_data_path', default='./data/semantickitti/semantickitti_train_cube_size_12.pkl', type=str, help='path to train dataset')
+    parser.add_argument('--train_data_path', default='./data/sonardata/sonardata_train_cube_size_12.pkl', type=str, help='path to train dataset')
     parser.add_argument('--train_cube_size', default=12, type=int, help='cube size of train dataset')
-    parser.add_argument('--val_data_path', default='./data/semantickitti/semantickitti_val_cube_size_12.pkl', type=str, help='path to val dataset')
+    parser.add_argument('--val_data_path', default='./data/sonardata/sonardata_val_cube_size_12.pkl', type=str, help='path to val dataset')
     parser.add_argument('--val_cube_size', default=12, type=int, help='cube size of val dataset')
-    parser.add_argument('--test_data_path', default='./data/semantickitti/semantickitti_test_cube_size_12.pkl', type=str, help='path to test dataset')
+    parser.add_argument('--test_data_path', default='./data/sonardata/sonardata_test_cube_size_12.pkl', type=str, help='path to test dataset')
     parser.add_argument('--test_cube_size', default=12, type=int, help='cube size of test dataset')
     parser.add_argument('--peak', default=None, type=float, help='peak value for PSNR calculation')
     # train

@@ -22,7 +22,7 @@ class CompressDataset(Dataset):
         # the points_num should be larger than or equal to the min_num of each cube
         self.points_num = points_num
 
-
+    #问题，cude_idx对应的是什么
     def init_data(self):
         # data :{pcd_idx: {'points': {cube_idx: ...}, 'meta_data':{'shift':..., 'min_points':..., 'max_points':...}}}
         self.patch_num = []
@@ -55,20 +55,21 @@ class CompressDataset(Dataset):
         # the coordinate of center point
         center = [(cube_x + 0.5) * self.cube_size, (cube_y + 0.5) * self.cube_size, (cube_z + 0.5) * self.cube_size]
         xyzs = self.data[pcd_idx]['points'][cubes[patch_idx]][:, :3]
-        normals = self.data[pcd_idx]['points'][cubes[patch_idx]][:, 3:]
+        # 成功获取intensity
+        intensity = self.data[pcd_idx]['points'][cubes[patch_idx]][:, 3:]
         # normalize to [-1, 1]
         xyzs = 2 * (xyzs - center) / self.cube_size
         xyzs = torch.tensor(xyzs).float()
-        normals = torch.tensor(normals).float()
+        intensity = torch.tensor(intensity).float()
         input_dict = {}
         if self.batch_size == 1:
             input_dict['xyzs'] = xyzs
-            input_dict['normals'] = normals
+            input_dict['normals'] = intensity
         else:
             sample_idx = random.sample(range(xyzs.shape[0]), self.points_num)
             sample_idx = torch.tensor(sample_idx).long()
             input_dict['xyzs'] = xyzs[sample_idx, :]
-            input_dict['normals'] = normals[sample_idx, :]
+            input_dict['normals'] = intensity[sample_idx, :]
 
         return input_dict
 

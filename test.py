@@ -7,7 +7,7 @@ from models.autoencoder import AutoEncoder
 import time
 import argparse
 from args.shapenet_args import parse_shapenet_args
-from args.semantickitti_args import parse_semantickitti_args
+from args.sonardata_args import parse_sonardata_args
 from models.utils import save_pcd, AverageMeter, str2bool
 from dataset.dataset import CompressDataset
 from metrics.PSNR import get_psnr
@@ -260,7 +260,8 @@ def test_normals(args):
     gt_patch_dir, pred_patch_dir, gt_merge_dir, pred_merge_dir = make_dirs(save_dir)
 
     # load model
-    args.in_fdim = 6
+    #args.in_fdim = 6
+    args.in_fdim = 4
     model = load_model(args, model_path)
 
     # metrics
@@ -377,7 +378,7 @@ def parse_test_args():
     parser = argparse.ArgumentParser(description='Test Arguments')
 
     # dataset
-    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or semantickitti')
+    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or sonardata')
     parser.add_argument('--model_path', default='path to ckpt', type=str, help='path to ckpt')
     parser.add_argument('--batch_size', default=1, type=int, help='the test batch_size must be 1')
     parser.add_argument('--downsample_rate', default=[1/3, 1/3, 1/3], nargs='+', type=float, help='downsample rate')
@@ -399,14 +400,14 @@ def parse_test_args():
 
 if __name__ == "__main__":
     test_args = parse_test_args()
-    assert test_args.dataset in ['shapenet', 'semantickitti']
+    assert test_args.dataset in ['shapenet', 'sonardata']
     # the test batch_size must be 1
     assert test_args.batch_size == 1
 
     if test_args.dataset == 'shapenet':
         model_args = parse_shapenet_args()
     else:
-        model_args = parse_semantickitti_args()
+        model_args = parse_sonardata_args()
 
     reset_model_args(test_args, model_args)
 

@@ -6,7 +6,7 @@ def parse_shapenet_args():
     parser = argparse.ArgumentParser(description='Model Arguments')
 
     # dataset name
-    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or semantickitti')
+    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or sonardata')
     # optimizer
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate for backbone')
     parser.add_argument('--aux_lr', default=1e-3, type=float, help='learning rate for entropy model')
