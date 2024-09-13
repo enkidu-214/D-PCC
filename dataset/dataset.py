@@ -22,7 +22,7 @@ class CompressDataset(Dataset):
         # the points_num should be larger than or equal to the min_num of each cube
         self.points_num = points_num
 
-    #问题，cude_idx对应的是什么
+    #问题，cude_idx对应的是什么，对应的是之前生成的cube的序号，一个points中有很多cube
     def init_data(self):
         # data :{pcd_idx: {'points': {cube_idx: ...}, 'meta_data':{'shift':..., 'min_points':..., 'max_points':...}}}
         self.patch_num = []
@@ -30,11 +30,13 @@ class CompressDataset(Dataset):
             cur_patch_num = len(self.data[pcd_idx]['points'].keys())
             self.patch_num.append(cur_patch_num)
         # the last patch num of each full point cloud
+        #看起来只是获取了所有的点云的cube个数，把每个cube当成一个patch
         self.pcd_last_patch_num = np.cumsum(self.patch_num)
 
-
+    #这里还是挺困惑的，为什么能拿到idx
     def get_pcd_and_patch(self, idx):
         diff = idx + 1 - self.pcd_last_patch_num
+
         pcd_idx = np.where(diff <= 0)[0][0]
         if pcd_idx > 0:
             patch_idx = idx - self.pcd_last_patch_num[pcd_idx-1]
@@ -62,6 +64,7 @@ class CompressDataset(Dataset):
         xyzs = torch.tensor(xyzs).float()
         intensity = torch.tensor(intensity).float()
         input_dict = {}
+        # 这边sample没看懂
         if self.batch_size == 1:
             input_dict['xyzs'] = xyzs
             input_dict['normals'] = intensity
@@ -79,6 +82,7 @@ class CompressDataset(Dataset):
 
 
     # scale to original size
+    # TODO可以在此处加对intensity的操作
     def scale_to_origin(self, xyzs, idx):
         pcd_idx, patch_idx = self.get_pcd_and_patch(idx)
         cubes = list(self.data[pcd_idx]['points'].keys())

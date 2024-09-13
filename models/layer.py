@@ -155,13 +155,13 @@ class DownsampleLayer(nn.Module):
         self.args = args
         self.k = args.k
         self.downsample_rate = args.downsample_rate[layer_idx]
-
+        # 保持维度
         self.pre_conv = nn.Conv1d(args.dim, args.dim, 1)
 
         self.feats_agg_nn = PointTransformerLayer(args.dim, args.dim, args)
         self.position_embedding_nn = PositionEmbeddingLayer(args)
         self.density_embedding_nn = DensityEmbeddingLayer(args)
-
+        # 降维操作，令人觉得神奇
         self.post_conv = nn.Conv1d(args.dim * 3, args.dim, 1)
 
 
@@ -170,25 +170,25 @@ class DownsampleLayer(nn.Module):
 
         batch_size = xyzs.shape[0]
         sample_num = sampled_xyzs.shape[2]
-        # (b, n, 3)
+        # (b, n, 3) contiguous判断是否在内存中连续
         xyzs_trans = xyzs.permute(0, 2, 1).contiguous()
         # (b, sample_num, 3)
         sampled_xyzs_trans = sampled_xyzs.permute(0, 2, 1).contiguous()
 
-        # find the nearest neighbor in sampled_xyzs_trans: (b, n, 1)
+        # find the nearest neighbor in sampled_xyzs_trans: (b, n, 1)，表示每个xyz点中对应的最近的留存点
         ori2sample_idx = pointops.knnquery_heap(1, sampled_xyzs_trans, xyzs_trans)
 
-        # (b, sample_num)
+        # (b, sample_num)每个留存点在xyzs中作为最近邻的次数
         downsample_num = torch.zeros((batch_size, sample_num)).cuda()
         for i in range(batch_size):
             uniques, counts = torch.unique(ori2sample_idx[i], return_counts=True)
             downsample_num[i][uniques.long()] = counts.float()
 
-        # (b, m, k)
+        # (b, m, k) 找到哪些点该被陷落到对应的留存点中
         knn_idx = pointops.knnquery_heap(self.k, xyzs_trans, sampled_xyzs_trans).long()
         torch.cuda.empty_cache()
 
-        # mask: (m)
+        # mask: (m) 比较两个张量中的点是否相等，是则True否则为False
         expect_center = torch.arange(0, sample_num).cuda()
         # (b, m, k)
         expect_center = repeat(expect_center, 'm -> b m k', b=batch_size, k=self.k)
@@ -224,11 +224,12 @@ class DownsampleLayer(nn.Module):
         xyzs_trans = xyzs.permute(0, 2, 1).contiguous()
 
         # FPS, (b, sample_num)
+        # 返回每个batch，被采样的点的idx
         sample_idx = pointops.furthestsampling(xyzs_trans, sample_num).long()
         # (b, 3, sample_num)
         sampled_xyzs = index_points(xyzs, sample_idx)
 
-        # get density
+        # get density sampled_xyzs是被留下的点
         downsample_num, mean_distance, mask, knn_idx = self.get_density(sampled_xyzs, xyzs)
 
         identity = feats

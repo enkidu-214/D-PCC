@@ -69,7 +69,7 @@ def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_nu
     min_num and max_num points in each cube, if small than min_num or larger than max_num then discard it
     return label that indicates each points' cube_idx
     '''
-
+   
     output_points = {}
     # points = np.dot(points, get_rotate_matrix())
     xyzs, meta_data = normalize_pcd(xyzs)
@@ -94,10 +94,10 @@ def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_nu
             cubes[tuple_cube_idx] = []
         cubes[tuple_cube_idx].append(idx)
 
-    #去除包含点较少和较多的cube
-    del_k = -1
+    #去除包含点较少和较多的cube，感觉不太合理，可以删掉
+    """ del_k = -1
     k_del = []
-    for k in cubes.keys():
+    for k in cubes.keys():            
         if len(cubes[k]) < min_num:
             label[cubes[k]] = del_k
             del_k -= 1
@@ -107,8 +107,8 @@ def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_nu
             del_k -= 1
             k_del.append(k)
     for k in k_del:
-        del cubes[k]
-
+        del cubes[k] """
+ 
     for tuple_cube_idx, point_idx in cubes.items():
         dim_cube_num = np.ceil(map_size/cube_size).astype(int)
         # indicate which cube a point belongs to

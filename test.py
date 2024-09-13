@@ -151,20 +151,20 @@ def test_xyzs(args):
     pcd_gt_patches = []
     pcd_pred_patches = []
 
-    # test
+    # test，不训练梯度了
     with torch.no_grad():
         for i, input_dict in enumerate(test_loader):
             # input: (b, n, c)
             input = input_dict['xyzs'].cuda()
             # normals : (b, n, c)
             gt_normals = input_dict['normals'].cuda()
-            # (b, c, n)
+            # (b, c, n)，这里为什么要换位置呢？
             input = input.permute(0, 2, 1).contiguous()
             xyzs = input[:, :3, :].contiguous()
             gt_patches = xyzs
             feats = input
 
-            # compress
+            # compress，feats和xyz不是一个东西吗
             latent_xyzs_str, xyzs_size, latent_feats_str, feats_size, encode_time, \
             actual_bpp = compress(args, model, xyzs, feats)
 

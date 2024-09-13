@@ -45,13 +45,14 @@ def index_points(xyzs, idx):
     batch_size = idx.shape[0]
     sample_num = idx.shape[1]
     fdim = xyzs.shape[1]
-
+    # 每个batch sample的都是同样大小的数据，因为是矩阵
     reshape = False
     if len(idx.shape) == 3:
         reshape = True
         idx = idx.reshape(batch_size, -1)
 
     # (b, c, (s k))
+    # 看不太懂，应该是提取出对应位置的point信息
     res = torch.gather(xyzs, 2, idx[:, None].repeat(1, fdim, 1))
 
     if reshape:
