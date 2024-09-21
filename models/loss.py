@@ -90,6 +90,7 @@ def get_normal_loss(gt_normals, pred_normals, pred2gt_idx, args):
     mes_loss = nn.MSELoss()
 
     nearest_normal = index_points(gt_normals, pred2gt_idx)
+    # import pdb;pdb.set_trace()
     normal_loss = mes_loss(pred_normals, nearest_normal)
     normal_loss = normal_loss * args.normal_coe
 

@@ -188,7 +188,7 @@ class DownsampleLayer(nn.Module):
         knn_idx = pointops.knnquery_heap(self.k, xyzs_trans, sampled_xyzs_trans).long()
         torch.cuda.empty_cache()
 
-        # mask: (m) 比较两个张量中的点是否相等，是则True否则为False
+        # mask: (m) 首先生成[0,1,2,...,sample_num]的数组并放在cuda上
         expect_center = torch.arange(0, sample_num).cuda()
         # (b, m, k)
         expect_center = repeat(expect_center, 'm -> b m k', b=batch_size, k=self.k)
@@ -197,6 +197,7 @@ class DownsampleLayer(nn.Module):
         # (b, m, k)
         real_center = real_center.squeeze(1)
         # mask those points that not belong to collapsed points set
+        # 每个保留的骨架点会对应16个邻点，但是有些邻点是骨架点，要把这些点给mask成True
         mask = torch.eq(expect_center, real_center)
 
         # (b, 3, m, k)
@@ -213,9 +214,11 @@ class DownsampleLayer(nn.Module):
 
         return downsample_num, mean_distance, mask, knn_idx
 
-
+    # 注意feats在有intensity的时候是包含intensity的
     def forward(self, xyzs, feats):
-        # xyzs: (b, 3, n), features: (b, cin, n)
+        # xyzs: (b, 3, n), features: (b, cin, n)，b默认值为1
+        #import pdb;pdb.set_trace()
+        #这里是取knn的时候的邻居数，如果输入过小的话也就小了
         if self.k > xyzs.shape[2]:
             self.k = xyzs.shape[2]
 
@@ -229,7 +232,7 @@ class DownsampleLayer(nn.Module):
         # (b, 3, sample_num)
         sampled_xyzs = index_points(xyzs, sample_idx)
 
-        # get density sampled_xyzs是被留下的点
+        # get density sampled_xyzs是被留下的点，mask将本不该在邻域点的留下点mask成true，knn_idx对应各个骨架点的邻域点
         downsample_num, mean_distance, mask, knn_idx = self.get_density(sampled_xyzs, xyzs)
 
         identity = feats
@@ -313,6 +316,7 @@ class EdgeConv(nn.Module):
 
 
 class SubPointConv(nn.Module):
+                            #  3          3         1
     def __init__(self, args, in_fdim, out_fdim, group_num):
         super(SubPointConv, self).__init__()
 
@@ -408,6 +412,7 @@ class XyzsUpsampleLayer(nn.Module):
 
 
 class FeatsUpsampleLayer(nn.Module):
+    #default upsample_rate is 1
     def __init__(self, args, layer_idx, upsample_rate=None, decompress_normal=False):
         super(FeatsUpsampleLayer, self).__init__()
 
@@ -419,7 +424,8 @@ class FeatsUpsampleLayer(nn.Module):
         # weather decompress normal
         self.decompress_normal = decompress_normal
         if self.decompress_normal:
-            self.out_fdim = 3
+            # 这里要改，但是不止是这里有问题
+            self.out_fdim = 1
         else:
             self.out_fdim = args.dim
 

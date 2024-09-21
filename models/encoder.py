@@ -22,6 +22,7 @@ class Encoder(nn.Module):
         gt_dnums = []
         gt_mdis = []
         for encoder_layer in self.encoder_layers:
+            # 这里为什么要用append，按照逻辑来说应该是只用最老的吧
             gt_xyzs.append(xyzs)
             xyzs, feats, downsample_num, mean_distance = encoder_layer(xyzs, feats)
             gt_dnums.append(downsample_num)

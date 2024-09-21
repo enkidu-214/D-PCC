@@ -1,1 +1,7 @@
 dataset/Manifold
+models/__pycache__/*
+models/pointops/*
+models/Chamfer3D/*
+dataset/__pycache__/*
+metrics/__pycache__/*
+args/__pycache__/*

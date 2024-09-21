@@ -102,3 +102,13 @@ class CompressDataset(Dataset):
         xyzs = xyzs * (max_coord - min_coord) + min_coord + shift
 
         return xyzs
+    
+    def attr_to_origin(self, attribute, idx):
+        pcd_idx, _ = self.get_pcd_and_patch(idx)
+        meta_data = self.data[pcd_idx]['meta_data']
+        max_attr, min_attr = meta_data["max_attr"],meta_data["min_attr"]
+        attribute = attribute*(max_attr-min_attr) + min_attr
+        attribute = torch.exp(attribute)
+        
+        return attribute
+

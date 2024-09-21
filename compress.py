@@ -7,7 +7,7 @@ from models.autoencoder import AutoEncoder
 import time
 import argparse
 import pickle as pkl
-from args.semantickitti_args import parse_sonardata_args
+from args.sonardata_args import parse_sonardata_args
 from models.utils import save_pcd, AverageMeter, str2bool
 from dataset.dataset import CompressDataset
 from metrics.PSNR import get_psnr

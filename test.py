@@ -16,9 +16,6 @@ from metrics.F1Score import get_f1_score
 from models.Chamfer3D.dist_chamfer_3D import chamfer_3DDist
 chamfer_dist = chamfer_3DDist()
 
-
-
-
 def make_dirs(save_dir):
     gt_patch_dir = os.path.join(save_dir, 'patch/gt')
     if not os.path.exists(gt_patch_dir):
@@ -322,8 +319,9 @@ def test_normals(args):
             original_gt_patches = test_dataset.scale_to_origin(gt_patches.detach().cpu(), i).squeeze(0).numpy()
             original_pred_patches = test_dataset.scale_to_origin(pred_patches.detach().cpu(), i).squeeze(0).numpy()
             # tensor -> numpy
-            gt_normals = gt_normals.squeeze(0).detach().cpu().numpy()
-            pred_normals = pred_normals.squeeze(0).detach().cpu().numpy()
+            # 去除第0维的数据，然后提取结果不参加反向传播，然后转移到cpu，最后转换成numpy格式的数据
+            gt_normals = test_dataset.attr_to_origin(gt_normals.detach().cpu(),i).squeeze(0).numpy()
+            pred_normals = test_dataset.attr_to_origin(pred_normals.detach().cpu(),i).squeeze(0).numpy()
             # save xyzs and normals
             save_pcd(gt_patch_dir, str(i) + '.ply', original_gt_patches, gt_normals)
             save_pcd(pred_patch_dir, str(i) + '.ply', original_pred_patches, pred_normals)
@@ -378,16 +376,16 @@ def parse_test_args():
     parser = argparse.ArgumentParser(description='Test Arguments')
 
     # dataset
-    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or sonardata')
+    parser.add_argument('--dataset', default='sonardata', type=str, help='shapenet or sonardata')
     parser.add_argument('--model_path', default='path to ckpt', type=str, help='path to ckpt')
     parser.add_argument('--batch_size', default=1, type=int, help='the test batch_size must be 1')
-    parser.add_argument('--downsample_rate', default=[1/3, 1/3, 1/3], nargs='+', type=float, help='downsample rate')
+    parser.add_argument('--downsample_rate', default=[1/2, 1/3, 1/3], nargs='+', type=float, help='downsample rate')
     parser.add_argument('--max_upsample_num', default=[8, 8, 8], nargs='+', type=int, help='max upsmaple number, reversely symmetric with downsample_rate')
     parser.add_argument('--bpp_lambda', default=1e-3, type=float, help='bpp loss coefficient')
     # normal compression
-    parser.add_argument('--compress_normal', default=False, type=str2bool, help='whether compress normals')
+    parser.add_argument('--compress_normal', default=True, type=str2bool, help='whether compress normals')
     # compress latent xyzs
-    parser.add_argument('--quantize_latent_xyzs', default=True, type=str2bool, help='whether compress latent xyzs')
+    parser.add_argument('--quantize_latent_xyzs', default=False, type=str2bool, help='whether compress latent xyzs')
     parser.add_argument('--latent_xyzs_conv_mode', default='mlp', type=str, help='latent xyzs conv mode, mlp or edge_conv')
     # sub_point_conv mode
     parser.add_argument('--sub_point_conv_mode', default='mlp', type=str, help='sub-point conv mode, mlp or edge_conv')

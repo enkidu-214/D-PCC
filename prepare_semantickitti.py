@@ -40,12 +40,18 @@ def load_pcd(path, dataset_name='sonardata'):
 #         pcd_path += cur_pcd_path
 #     return pcd_path
 
+def split_array(arr, ratio=0.9):
+    random.shuffle(arr)
+    split_point = int(len(arr) * ratio)
+
+    return arr[:split_point], arr[split_point:]
+
 def search_path(data_root):
-    pcd_path = [os.path.join(dir, p) for p in os.listdir(data_root) if p.endswith('.bin')]
+    pcd_path = [os.path.join(data_root, p) for p in os.listdir(data_root) if p.endswith('.bin')]
     return pcd_path
 
 #先取平均值，然后计算最大值最小值，最后根据两个极值归一化，拿三个数据
-def normalize_pcd(xyzs):
+def normalize_pcd(xyzs,attribute = None):
     '''
      normalize xyzs to [0,1], keep ratio unchanged
     '''
@@ -58,8 +64,13 @@ def normalize_pcd(xyzs):
     meta_data['shift'] = shift
     meta_data['max_coord'] = max_coord
     meta_data['min_coord'] = min_coord
-    return xyzs, meta_data
-
+    if attribute is not None:
+        attribute = np.log(attribute)
+        max_attr,min_attr = np.max(attribute),np.min(attribute)
+        attribute = (attribute - min_attr) / (max_attr - min_attr)
+        meta_data["max_attr"] = max_attr
+        meta_data["min_attr"] = min_attr
+    return xyzs, attribute, meta_data
 
 def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_num=30000, sample_num=None):
     '''
@@ -69,10 +80,10 @@ def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_nu
     min_num and max_num points in each cube, if small than min_num or larger than max_num then discard it
     return label that indicates each points' cube_idx
     '''
-   
+
     output_points = {}
     # points = np.dot(points, get_rotate_matrix())
-    xyzs, meta_data = normalize_pcd(xyzs)
+    xyzs, attribute, meta_data = normalize_pcd(xyzs, attribute)
 
     #先归一化到0-1，又扩张。。。
     
@@ -95,7 +106,7 @@ def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_nu
         cubes[tuple_cube_idx].append(idx)
 
     #去除包含点较少和较多的cube，感觉不太合理，可以删掉
-    """ del_k = -1
+    del_k = -1
     k_del = []
     for k in cubes.keys():            
         if len(cubes[k]) < min_num:
@@ -107,7 +118,7 @@ def divide_cube(xyzs, attribute, map_size=100, cube_size=10, min_num=100, max_nu
             del_k -= 1
             k_del.append(k)
     for k in k_del:
-        del cubes[k] """
+        del cubes[k]
  
     for tuple_cube_idx, point_idx in cubes.items():
         dim_cube_num = np.ceil(map_size/cube_size).astype(int)
@@ -191,7 +202,6 @@ def generate_dataset(path_list, dataset_name='sonardata', mode='train', cube_siz
 
 def parse_dataset_args():
     parser = argparse.ArgumentParser(description='SonarData Dataset Arguments')
-
     # data root
     parser.add_argument('--data_root', default=None, type=str, help='dir of sonardata dataset')
     # cube size
@@ -206,19 +216,18 @@ def parse_dataset_args():
     args = parser.parse_args()
     return args
 
-
-
-
 if __name__ == '__main__':
     dataset_args = parse_dataset_args()
-    dataset_args.data_root = os.path.join(dataset_args.data_root, 'dataset/')
+    dataset_args.data_root = os.path.join( "./dataset/" , dataset_args.data_root)
+    print(dataset_args.data_root)
     assert  dataset_args.data_root != None and os.path.exists(dataset_args.data_root)
 
     # 1. get pcd path
     # train_seq = ['00', '01', '02', '03', '04', '05', '06', '07', '09', '10']
     # test_seq = ['08']
     #train_path = search_path(dataset_args.data_root, train_seq)
-    train_path = search_path(dataset_args.data_root)
+    train_path = search_path(data_root=dataset_args.data_root)
+    train_path, test_path = split_array(train_path)
     train_path, val_path = train_test_split(train_path, test_size=0.045)
     #test_path = search_path(dataset_args.data_root, test_seq)
 
@@ -227,5 +236,5 @@ if __name__ == '__main__':
                      max_num=dataset_args.max_num, save_path='./data/sonardata')
     generate_dataset(val_path, 'sonardata', 'val', cube_size=dataset_args.cube_size, min_num=dataset_args.train_min_num,
                      max_num=dataset_args.max_num, save_path='./data/sonardata')
-    #generate_dataset(test_path, 'sonardata', 'test', cube_size=dataset_args.cube_size, min_num=dataset_args.test_min_num,
-    #                 max_num=dataset_args.max_num, save_path='./data/sonardata')
+    generate_dataset(test_path, 'sonardata', 'test', cube_size=dataset_args.cube_size, min_num=dataset_args.test_min_num,
+                     max_num=dataset_args.max_num, save_path='./data/sonardata')

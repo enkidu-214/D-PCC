@@ -78,9 +78,10 @@ class AutoEncoder(nn.Module):
         feats = input
 
         # raise dimension
+        # import pdb;pdb.set_trace()
         feats = self.pre_conv(feats)
 
-        # downsample
+        # downsample feats包含了强度信息！！！
         gt_xyzs, gt_dnums, gt_mdis, latent_xyzs, latent_feats = self.encoder(xyzs, feats)
 
         # entropy bottleneck: compress latent feats
@@ -101,11 +102,12 @@ class AutoEncoder(nn.Module):
         else:
             # half float representation
             gt_latent_xyzs = latent_xyzs
+            # float16
             pred_latent_xyzs = latent_xyzs.half()
             xyzs_size = pred_latent_xyzs.shape[0] * pred_latent_xyzs.shape[2] * 16 * 3
             xyzs_bpp = xyzs_size / points_num
 
-        # upsample
+        # upsample,输入一个FP16的预测lantentxyz和
         pred_xyzs, pred_unums, pred_mdis, upsampled_feats = self.decoder(pred_latent_xyzs, latent_feats_hat)
 
         # get loss

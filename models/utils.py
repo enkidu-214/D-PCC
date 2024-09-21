@@ -74,11 +74,7 @@ def save_pcd(dir, name, xyzs, normals=None):
     f.write("property float y\n")
     f.write("property float z\n")
     if isinstance(normals, np.ndarray):
-        f.write("property float nx\n")
-        f.write("property float ny\n")
-        f.write("property float nz\n")
-    f.write("element face 0\n")
-    f.write("property list uchar int vertex_indices\n")
+        f.write("property float intensity\n")
     f.write("end_header\n")
     f.close()
 

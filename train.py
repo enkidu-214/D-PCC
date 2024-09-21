@@ -190,15 +190,15 @@ def reset_model_args(train_args, model_args):
 def parse_train_args():
     parser = argparse.ArgumentParser(description='Training Arguments')
 
-    parser.add_argument('--dataset', default='shapenet', type=str, help='shapenet or sonardata')
-    parser.add_argument('--batch_size', default=1, type=int, help='the performance will degrade if batch_size is larger than 1!')
-    parser.add_argument('--downsample_rate', default=[1/3, 1/3, 1/3], nargs='+', type=float, help='downsample rate')
+    parser.add_argument('--dataset', default='sonardata', type=str, help='shapenet or sonardata')
+    parser.add_argument('--batch_size', default=10, type=int, help='the performance will degrade if batch_size is larger than 1!')
+    parser.add_argument('--downsample_rate', default=[1/2, 1/3, 1/3], nargs='+', type=float, help='downsample rate')
     parser.add_argument('--max_upsample_num', default=[8, 8, 8], nargs='+', type=int, help='max upsmaple number, reversely symmetric with downsample_rate')
-    parser.add_argument('--bpp_lambda', default=1e-3, type=float, help='bpp loss coefficient')
+    parser.add_argument('--bpp_lambda', default=1e-4, type=float, help='bpp loss coefficient')
     # normal compression
-    parser.add_argument('--compress_normal', default=False, type=str2bool, help='whether compress normals')
+    parser.add_argument('--compress_normal', default=True, type=str2bool, help='whether compress normals')
     # compress latent xyzs
-    parser.add_argument('--quantize_latent_xyzs', default=True, type=str2bool, help='whether compress latent xyzs')
+    parser.add_argument('--quantize_latent_xyzs', default=False, type=str2bool, help='whether compress latent xyzs')
     parser.add_argument('--latent_xyzs_conv_mode', default='mlp', type=str, help='latent xyzs conv mode, mlp or edge_conv')
     # sub_point_conv mode
     parser.add_argument('--sub_point_conv_mode', default='mlp', type=str, help='sub-point conv mode, mlp or edge_conv')
@@ -220,5 +220,4 @@ if __name__ == "__main__":
         model_args = parse_sonardata_args()
 
     reset_model_args(train_args, model_args)
-
     train(model_args)
