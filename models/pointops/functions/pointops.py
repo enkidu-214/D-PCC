@@ -44,6 +44,11 @@ class FurthestSampling(Function):
         """
         assert xyz.is_contiguous()
         b, n, _ = xyz.size()
+
+        # onnx
+        if isinstance(n, torch.Tensor):
+            n = n.item()
+
         idx = torch.cuda.IntTensor(b, m)
         temp = torch.cuda.FloatTensor(b, n).fill_(1e10)
         pointops_cuda.furthestsampling_cuda(b, n, m, xyz, temp, idx)

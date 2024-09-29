@@ -219,16 +219,24 @@ class DownsampleLayer(nn.Module):
         # xyzs: (b, 3, n), features: (b, cin, n)，b默认值为1
         #import pdb;pdb.set_trace()
         #这里是取knn的时候的邻居数，如果输入过小的话也就小了
-        if self.k > xyzs.shape[2]:
-            self.k = xyzs.shape[2]
+        
+        #onnx
+        # if self.k > xyzs.shape[2]:
+        #     self.k = xyzs.shape[2]
+        
+        #onnx
+        #sample_num = round(xyzs.shape[2] * self.downsample_rate)
 
-        sample_num = round(xyzs.shape[2] * self.downsample_rate)
+        sample_num = int(xyzs.shape[2] * self.downsample_rate)
+
         # (b, n, 3)
         xyzs_trans = xyzs.permute(0, 2, 1).contiguous()
-
         # FPS, (b, sample_num)
         # 返回每个batch，被采样的点的idx
         sample_idx = pointops.furthestsampling(xyzs_trans, sample_num).long()
+        # print(sample_idx)
+        # sample_idx = torch.from_numpy(np.random.choice(1000, (1, sample_num))).long().cuda()
+        # sample_idx = torch.randint(0, 8134, (1, sample_num)).cuda().long()
         # (b, 3, sample_num)
         sampled_xyzs = index_points(xyzs, sample_idx)
 
@@ -424,7 +432,7 @@ class FeatsUpsampleLayer(nn.Module):
         # weather decompress normal
         self.decompress_normal = decompress_normal
         if self.decompress_normal:
-            # 这里要改，但是不止是这里有问题
+            # done
             self.out_fdim = 1
         else:
             self.out_fdim = args.dim

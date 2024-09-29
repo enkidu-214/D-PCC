@@ -85,7 +85,7 @@ def train(args):
                 normals = input_dict['normals'].cuda().permute(0, 2, 1).contiguous()
                 input = torch.cat((input, normals), dim=1)
 
-            # model forward
+            # model forward 这里需要拆成两个部分，loss如何做呢
             decompressed_xyzs, loss, loss_items, bpp = model(input)
             epoch_loss.update(loss.item())
             epoch_chamfer_loss.update(loss_items['chamfer_loss'])
